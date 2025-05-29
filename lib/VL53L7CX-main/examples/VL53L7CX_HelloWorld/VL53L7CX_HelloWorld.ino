@@ -63,9 +63,9 @@
 #endif
 #define SerialPort Serial
 
-#define LPN_PIN A3
-#define I2C_RST_PIN A1
-#define PWREN_PIN A5
+#define LPN_PIN 48
+#define I2C_RST_PIN 47
+#define PWREN_PIN -1
 
 void print_result(VL53L7CX_ResultsData *Result);
 void clear_screen(void);
@@ -92,7 +92,7 @@ void setup()
   }
 
   // Initialize serial for output.
-  SerialPort.begin(460800);
+  SerialPort.begin(115200);
 
   // Initialize I2C bus.
   DEV_I2C.begin();
@@ -106,8 +106,7 @@ void setup()
   sensor_vl53l7cx_top.vl53l7cx_start_ranging();
 }
 
-void loop()
-{
+void loop(){
   VL53L7CX_ResultsData Results;
   uint8_t NewDataReady = 0;
   uint8_t status;
@@ -121,15 +120,13 @@ void loop()
     print_result(&Results);
   }
 
-  if (Serial.available()>0)
-  {
+  if (Serial.available()>0) {
     handle_cmd(Serial.read());
   }
   delay(1000);
 }
 
-void print_result(VL53L7CX_ResultsData *Result)
-{
+void print_result(VL53L7CX_ResultsData *Result){
   int8_t i, j, k, l;
   uint8_t zones_per_line;
   uint8_t number_of_zones = res;
@@ -140,13 +137,11 @@ void print_result(VL53L7CX_ResultsData *Result)
 
   SerialPort.print("Cell Format :\n\n");
   
-  for (l = 0; l < VL53L7CX_NB_TARGET_PER_ZONE; l++)
-  {
+  for (l = 0; l < VL53L7CX_NB_TARGET_PER_ZONE; l++){
     snprintf(report, sizeof(report)," \033[38;5;10m%20s\033[0m : %20s\n", "Distance [mm]", "Status");
     SerialPort.print(report);
 
-    if(EnableAmbient || EnableSignal)
-    {
+    if(EnableAmbient || EnableSignal) {
       snprintf(report, sizeof(report)," %20s : %20s\n", "Signal [kcps/spad]", "Ambient [kcps/spad]");
       SerialPort.print(report);
     }
@@ -154,8 +149,7 @@ void print_result(VL53L7CX_ResultsData *Result)
 
   SerialPort.print("\n\n");
 
-  for (j = 0; j < number_of_zones; j += zones_per_line)
-  {
+  for (j = 0; j < number_of_zones; j += zones_per_line){
     for (i = 0; i < zones_per_line; i++) 
       SerialPort.print(" -----------------");
     SerialPort.print("\n");
@@ -164,20 +158,16 @@ void print_result(VL53L7CX_ResultsData *Result)
       SerialPort.print("|                 ");
     SerialPort.print("|\n");
   
-    for (l = 0; l < VL53L7CX_NB_TARGET_PER_ZONE; l++)
-    {
+    for (l = 0; l < VL53L7CX_NB_TARGET_PER_ZONE; l++){
       // Print distance and status 
-      for (k = (zones_per_line - 1); k >= 0; k--)
-      {
-        if (Result->nb_target_detected[j+k]>0)
-        {
+      for (k = (zones_per_line - 1); k >= 0; k--){
+        if (Result->nb_target_detected[j+k]>0){
           snprintf(report, sizeof(report),"| \033[38;5;10m%5ld\033[0m  :  %5ld ",
               (long)Result->distance_mm[(VL53L7CX_NB_TARGET_PER_ZONE * (j+k)) + l],
               (long)Result->target_status[(VL53L7CX_NB_TARGET_PER_ZONE * (j+k)) + l]);
               SerialPort.print(report);
         }
-        else
-        {
+        else{
           snprintf(report, sizeof(report),"| %5s  :  %5s ", "X", "X");
           SerialPort.print(report);
         }
@@ -187,33 +177,26 @@ void print_result(VL53L7CX_ResultsData *Result)
       if (EnableAmbient || EnableSignal )
       {
         // Print Signal and Ambient 
-        for (k = (zones_per_line - 1); k >= 0; k--)
-        {
-          if (Result->nb_target_detected[j+k]>0)
-          {
-            if (EnableSignal)
-            {
+        for (k = (zones_per_line - 1); k >= 0; k--){
+          if (Result->nb_target_detected[j+k]>0){
+            if (EnableSignal){
               snprintf(report, sizeof(report),"| %5ld  :  ", (long)Result->signal_per_spad[(VL53L7CX_NB_TARGET_PER_ZONE * (j+k)) + l]);
               SerialPort.print(report);
             }
-            else
-            {
+            else{
               snprintf(report, sizeof(report),"| %5s  :  ", "X");
               SerialPort.print(report);
             }
-            if (EnableAmbient)
-            {
+            if (EnableAmbient){
               snprintf(report, sizeof(report),"%5ld ", (long)Result->ambient_per_spad[j+k]);
               SerialPort.print(report);
             }
-            else
-            {
+            else{
               snprintf(report, sizeof(report),"%5s ", "X");
               SerialPort.print(report);
             }
           }
-          else
-          {
+          else{
             snprintf(report, sizeof(report),"| %5s  :  %5s ", "X", "X");
             SerialPort.print(report);
           }
@@ -227,12 +210,10 @@ void print_result(VL53L7CX_ResultsData *Result)
   SerialPort.print("\n");
 }
 
-void toggle_resolution(void)
-{
+void toggle_resolution(void){
   sensor_vl53l7cx_top.vl53l7cx_stop_ranging();
 
-  switch (res)
-  {
+  switch (res){
     case VL53L7CX_RESOLUTION_4X4:
       res = VL53L7CX_RESOLUTION_8X8;
       break;
@@ -248,20 +229,17 @@ void toggle_resolution(void)
   sensor_vl53l7cx_top.vl53l7cx_start_ranging();
 }
 
-void toggle_signal_and_ambient(void)
-{
+void toggle_signal_and_ambient(void){
   EnableAmbient = (EnableAmbient) ? false : true;
   EnableSignal = (EnableSignal) ? false : true;
 }
 
-void clear_screen(void)
-{
+void clear_screen(void){
   snprintf(report, sizeof(report),"%c[2J", 27); /* 27 is ESC command */
   SerialPort.print(report);
 }
 
-void display_commands_banner(void)
-{
+void display_commands_banner(void){
   snprintf(report, sizeof(report),"%c[2H", 27); /* 27 is ESC command */
   SerialPort.print(report);
 
@@ -275,10 +253,8 @@ void display_commands_banner(void)
   Serial.print("\n");
 }
 
-void handle_cmd(uint8_t cmd)
-{
-  switch (cmd)
-  {
+void handle_cmd(uint8_t cmd){
+  switch (cmd){
     case 'r':
       toggle_resolution();
       clear_screen();
